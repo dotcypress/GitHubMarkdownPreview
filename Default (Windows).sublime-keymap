@@ -1,0 +1,7 @@
+[
+    {
+      "keys": ["ctrl+shift+g"],
+      "command": "github_markdown_preview",
+      "context": [ { "key": "selector", "operator": "equal", "operand": "text.html.markdown" } ]
+    }
+]
