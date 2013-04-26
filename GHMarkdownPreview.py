@@ -4,7 +4,12 @@ import sublime_plugin
 import tempfile
 import webbrowser
 import json
-import urllib.request
+import subprocess
+
+try:
+  import urllib
+except:
+  import urllib.request
 
 def call_exe(command, dir):
   try:
@@ -37,8 +42,12 @@ def generatePreview(text, repoName):
   http_header = { 'Content-type': 'application/json' }
   url = 'https://api.github.com/markdown'
   body = json.dumps({'text': text, 'mode': 'gfm', 'context': repoName}).encode('utf8')
-  req = urllib.request.Request(url, body, http_header)
-  resp = urllib.request.urlopen(req)
+  try:
+    resp = urllib.urlopen(url, body, http_header)
+  except:
+    req = urllib.request.Request(url, body, http_header)
+    resp = urllib.request.urlopen(req)
+
   return resp.read()
 
 class GithubMarkdownPreviewCommand(sublime_plugin.TextCommand):
