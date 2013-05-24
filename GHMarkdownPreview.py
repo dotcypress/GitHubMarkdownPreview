@@ -7,7 +7,7 @@ import json
 import subprocess
 
 try:
-  import urllib
+  import urllib2
 except:
   import urllib.request
 
@@ -43,11 +43,10 @@ def generatePreview(text, repoName):
   url = 'https://api.github.com/markdown'
   body = json.dumps({'text': text, 'mode': 'gfm', 'context': repoName}).encode('utf8')
   try:
-    resp = urllib.urlopen(url, body, http_header)
+    resp = urllib2.urlopen(url, body)
   except:
     req = urllib.request.Request(url, body, http_header)
     resp = urllib.request.urlopen(req)
-
   return resp.read()
 
 class GithubMarkdownPreviewCommand(sublime_plugin.TextCommand):
