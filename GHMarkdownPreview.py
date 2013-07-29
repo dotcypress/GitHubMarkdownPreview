@@ -35,7 +35,7 @@ def getGithubRepoName(filename):
     url = call_exe(['git', 'config', '--get', 'remote.' + remote + '.url'], directory)
     if url.startswith('git@github.com:'):
       return url.replace('git@github.com:', '')[0:-5]
-    if url.startswith('https://github.com/dotCypress/CoffeeLint.git'):
+    if url.startswith('https://github.com/'):
       return url.replace('https://github.com/', '')[0:-5]
 
 def generatePreview(text, repoName):
