@@ -6,25 +6,32 @@ import webbrowser
 import json
 import subprocess
 
+# The python package included with sublime text for Linux is missing the ssl
+# module (for technical reasons), so this import will fail. But, we can use the
+# curl command instead, which should be present on just about any Linux.
+use_curl = False
+try:
+    import ssl
+except ImportError as e:
+    use_curl = True
+
 try:
     import urllib2
 except ImportError:
     import urllib.request
 
 def call_exe(command, dir):
-    try:
-        process = subprocess.Popen(
-            command,
-            cwd=dir,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            shell=True,
-            universal_newlines=True)
-        stdout, stderr = process.communicate()
-        exit_code = process.wait()
-        return stdout
-    except OSError as e:
-        sublime.error_message(e)
+    process = subprocess.Popen(
+        command,
+        cwd=dir,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        universal_newlines=True)
+    stdout, stderr = process.communicate()
+    exit_code = process.wait()
+    if exit_code:
+        raise Exception(stdout)
+    return stdout
 
 def get_github_repo_name(filename):
     if filename is None:
@@ -42,6 +49,8 @@ def generate_preview(text, repo_name):
     http_header = { 'Content-type': 'application/json' }
     url = 'https://api.github.com/markdown'
     body = json.dumps({'text': text, 'mode': 'gfm', 'context': repo_name}).encode('utf8')
+    if use_curl:
+        return call_exe(['curl', url, "-d", body], ".").encode('utf8')
     try:
         resp = urllib2.urlopen(url, body)
     except NameError:
@@ -51,10 +60,13 @@ def generate_preview(text, repo_name):
 
 class github_markdown_preview_command(sublime_plugin.TextCommand):
     def run(self, edit):
-        selection = sublime.Region(0, self.view.size())
-        repoName = get_github_repo_name(self.view.file_name())
-        html = generate_preview(self.view.substr(selection), repoName)
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.html')
-        temp_file.write(html)
-        temp_file.close()
-        webbrowser.open(temp_file.name)
+        try:
+            selection = sublime.Region(0, self.view.size())
+            repoName = get_github_repo_name(self.view.file_name())
+            html = generate_preview(self.view.substr(selection), repoName)
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.html')
+            temp_file.write(html)
+            temp_file.close()
+            webbrowser.open("file://" + temp_file.name)
+        except Exception as e:
+            sublime.error_message("Error in GitHubMarkdownPreview package:\n\n" + str(e))
