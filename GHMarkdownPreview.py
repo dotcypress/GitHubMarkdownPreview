@@ -25,7 +25,7 @@ def call_exe(command, dir):
         command,
         cwd=dir,
         stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        stderr=subprocess.PIPE,
         universal_newlines=True)
     stdout, stderr = process.communicate()
     exit_code = process.wait()
