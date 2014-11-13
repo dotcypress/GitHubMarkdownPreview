@@ -33,22 +33,10 @@ def call_exe(command, dir):
         raise Exception(stdout)
     return stdout
 
-def get_github_repo_name(filename):
-    if filename is None:
-        return None
-    directory = os.path.dirname(filename)
-    remotes = call_exe(['git', 'remote'], directory).splitlines()
-    for remote in remotes:
-        url = call_exe(['git', 'config', '--get', 'remote.' + remote + '.url'], directory)
-        if url.startswith('git@github.com:'):
-            return url.replace('git@github.com:', '')[0:-5]
-        if url.startswith('https://github.com/'):
-            return url.replace('https://github.com/', '')[0:-5]
-
-def generate_preview(text, repo_name):
+def generate_preview(text):
     http_header = { 'Content-type': 'application/json' }
     url = 'https://api.github.com/markdown'
-    body = json.dumps({'text': text, 'mode': 'gfm', 'context': repo_name}).encode('utf8')
+    body = json.dumps({'text': text, 'mode': 'gfm', 'context': ''}).encode('utf8')
     if use_curl:
         return call_exe(['curl', url, "-d", body], ".").encode('utf8')
     try:
@@ -58,14 +46,17 @@ def generate_preview(text, repo_name):
         resp = urllib.request.urlopen(req)
     return resp.read()
 
+def wrap_content(tempfile, content):
+    html = ("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><link rel=\"stylesheet\" type=\"text/css\" href=\"https://gist.githubusercontent.com/andyferra/2554919/raw/2e66cabdafe1c9a7f354aa2ebf5bc38265e638e5/github.css\" media=\"screen\" /></head><body>%s</body></html>" % content.decode('utf8')).encode('utf8')
+    return html
+
 class github_markdown_preview_command(sublime_plugin.TextCommand):
     def run(self, edit):
         try:
             selection = sublime.Region(0, self.view.size())
-            repoName = get_github_repo_name(self.view.file_name())
-            html = generate_preview(self.view.substr(selection), repoName)
+            html = generate_preview(self.view.substr(selection))
             temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.html')
-            temp_file.write(html)
+            temp_file.write(wrap_content(temp_file, html))
             temp_file.close()
             webbrowser.open("file://" + temp_file.name)
         except Exception as e:
