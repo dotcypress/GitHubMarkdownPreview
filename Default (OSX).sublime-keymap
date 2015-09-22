@@ -1,6 +1,6 @@
 [
     {
-      "keys": ["ctrl+shift+g"],
+      "keys": ["super+f12"],
       "command": "github_markdown_preview",
       "context": [ { "key": "selector", "operator": "equal", "operand": "text.html.markdown" } ]
     }
