@@ -5,6 +5,7 @@ import tempfile
 import webbrowser
 import json
 import subprocess
+import urllib.parse
 
 # The python package included with sublime text for Linux is missing the ssl
 # module (for technical reasons), so this import will fail. But, we can use the
@@ -64,9 +65,11 @@ class github_markdown_preview_command(sublime_plugin.TextCommand):
             selection = sublime.Region(0, self.view.size())
             repoName = get_github_repo_name(self.view.file_name())
             path = os.path.dirname(self.view.file_name())
+            path_encoded = urllib.parse.quote(path)
+            header = "<head><base href='file://%s/'/></head>" % path_encoded
             html = generate_preview(self.view.substr(selection), repoName)
             temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.html')
-            temp_file.write(("<head><base href='file://%s/'/></head>" % path).encode("utf-8"))
+            temp_file.write(header.encode("utf-8"))
             temp_file.write(html)
             temp_file.close()
             webbrowser.open("file://" + temp_file.name)
