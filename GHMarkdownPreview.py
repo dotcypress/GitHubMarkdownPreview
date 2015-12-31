@@ -63,8 +63,10 @@ class github_markdown_preview_command(sublime_plugin.TextCommand):
         try:
             selection = sublime.Region(0, self.view.size())
             repoName = get_github_repo_name(self.view.file_name())
+            path = os.path.dirname(self.view.file_name())
             html = generate_preview(self.view.substr(selection), repoName)
             temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.html')
+            temp_file.write(("<head><base href='file://%s/'/></head>" % path).encode("utf-8"))
             temp_file.write(html)
             temp_file.close()
             webbrowser.open("file://" + temp_file.name)
