@@ -5,8 +5,6 @@ import tempfile
 import webbrowser
 import json
 import subprocess
-import urllib.parse
-
 # The python package included with sublime text for Linux is missing the ssl
 # module (for technical reasons), so this import will fail. But, we can use the
 # curl command instead, which should be present on just about any Linux.
@@ -20,6 +18,7 @@ try:
     import urllib2
 except ImportError:
     import urllib.request
+    import urllib.parse
 
 def call_exe(command, dir):
     process = subprocess.Popen(
@@ -65,7 +64,10 @@ class github_markdown_preview_command(sublime_plugin.TextCommand):
             selection = sublime.Region(0, self.view.size())
             repoName = get_github_repo_name(self.view.file_name())
             path = os.path.dirname(self.view.file_name())
-            path_encoded = urllib.parse.quote(path)
+            try:
+                path_encoded = urllib2.quote(path)
+            except NameError:
+                path_encoded = urllib.parse.quote(path)
             header = "<head><base href='file://%s/'/></head>" % path_encoded
             html = generate_preview(self.view.substr(selection), repoName)
             temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.html')
