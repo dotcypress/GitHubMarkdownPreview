@@ -30,7 +30,7 @@ def call_exe(command, dir):
     stdout, stderr = process.communicate()
     exit_code = process.wait()
     if exit_code:
-        raise Exception(stdout)
+        sublime.error_message("Error in GitHubMarkdownPreview exit code: " + str(exit_code) + "\n\n" + stderr)
     return stdout
 
 def get_github_repo_name(filename):
