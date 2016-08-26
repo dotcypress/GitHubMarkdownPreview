@@ -37,13 +37,16 @@ def get_github_repo_name(filename):
     if filename is None:
         return None
     directory = os.path.dirname(filename)
-    remotes = call_exe(['git', 'remote'], directory).splitlines()
-    for remote in remotes:
-        url = call_exe(['git', 'config', '--get', 'remote.' + remote + '.url'], directory)
-        if url.startswith('git@github.com:'):
-            return url.replace('git@github.com:', '')[0:-5]
-        if url.startswith('https://github.com/'):
-            return url.replace('https://github.com/', '')[0:-5]
+    try:
+        remotes = call_exe(['git', 'remote'], directory).splitlines()
+        for remote in remotes:
+            url = call_exe(['git', 'config', '--get', 'remote.' + remote + '.url'], directory)
+            if url.startswith('git@github.com:'):
+                return url.replace('git@github.com:', '')[0:-5]
+            if url.startswith('https://github.com/'):
+                return url.replace('https://github.com/', '')[0:-5]
+    except Exception as e:
+        sublime.error_message("Error in GitHubMarkdownPreview package:\n\n" + str(e))
 
 def generate_preview(text, repo_name):
     http_header = { 'Content-type': 'application/json' }
